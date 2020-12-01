@@ -4,7 +4,7 @@ import sys
 import requests
 
 # TODO make this part not suck
-SESSION_COOKIE = 'foo'
+SESSION_COOKIE = '_ga=GA1.2.1645853937.1605627450; session=53616c7465645f5fe567cd8537a15049458afbc753e621f14f19b476db94711675493b55592e42737eabaccc62511057; _gid=GA1.2.1874702779.1606821314; _gat=1'
 
 URL = "https://adventofcode.com/2020/day/%s/input"
 BASE_DIR = os.path.join(os.path.dirname(__file__), "./inputs")
