@@ -16,7 +16,7 @@ def run_tests():
 
     result_1 = run_1(test_inputs)
     if result_1 != 0:
-        raise Exception(f"Test 1 did not past, got {result}")
+        raise Exception(f"Test 1 did not past, got {result_1}")
 
     # result_2 = run_2(test_inputs)
     # if result_2 != 0:
