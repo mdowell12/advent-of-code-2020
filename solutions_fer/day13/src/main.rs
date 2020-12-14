@@ -23,23 +23,6 @@ impl Bus {
     }
 }
 
-struct BusDepartures {
-    current: usize,
-    step: usize,
-}
-
-impl Iterator for BusDepartures {
-    type Item = usize;
-
-    fn next(&mut self) -> Option<usize> {
-        let current = self.current;
-
-        self.current += self.step;
-
-        Some(current) // It'll never be None, but the Iterator trait requires this
-    }
-}
-
 fn main() {
     let stdin = io::stdin();
     let mut lines_iter = stdin.lock().lines();
@@ -78,10 +61,7 @@ fn main() {
     let mut current_candidate = 1;
     let mut current_step = 1;
     for bus in buses.iter() {
-        let mut bus_departures = BusDepartures {
-            current: current_candidate,
-            step: current_step,
-        };
+        let mut bus_departures = (current_candidate..).step_by(current_step);
         current_candidate = bus_departures
             .find(|dep| bus.matches_timestamp(*dep))
             .unwrap();
