@@ -14,34 +14,19 @@ def run_1(inputs):
 
 def run_2(inputs):
     buses = [int(i) if i != 'x' else i for i in inputs[1].strip().split(',')]
-    # Assume first one isn't an x
-    # first = int(buses[0])
-    # t = first
-    # while True:
-    #     # print(t)
-    #     if is_valid_time(t, buses):
-    #         return t
-    #     t += first
-    biggest = max(i for i in buses if i != 'x')
-    i_biggest = buses.index(biggest)
-    t = biggest * (int(100000000000000 / biggest) + 1)
-    while True:
-        if t % 100000 == 0:
-            print(t)
-        if is_valid_time(t, i_biggest, buses):
-            return t - i_biggest
-        t += biggest
+    current_guess = buses[0]
+    current_inc = current_guess
+    for i, bus in enumerate(buses[:-1]):
+        if buses[i+1] == 'x':
+            continue
+        while (current_guess + i + 1) % buses[i+1] != 0:
+            current_guess += current_inc
 
-# def is_valid_time(t, buses):
-#     # if t >= 1068774:
-#     #     import pdb; pdb.set_trace()
-#     for i, bus in enumerate(buses):
-#         if bus != "x" and (t + i) % int(bus) != 0:
-#             return False
-#     return True
+        current_inc = current_inc * buses[i+1]
+    return current_guess
+
+
 def is_valid_time(t, i_biggest, buses):
-    # if t >= 1068774:
-    # import pdb; pdb.set_trace()
     for i, bus in enumerate(buses):
         if bus == "x":
             continue
@@ -90,26 +75,12 @@ def run_tests():
 
 
 if __name__ == "__main__":
-    # run_tests()
+    run_tests()
 
     input = read_inputs(13)
 
     result_1 = run_1(input)
     print(f"Finished 1 with result {result_1}")
-    # 103665810300000 too low
-    # 1182922135469659 - 1 is upper bound b/c 1182922135469659 is LCD and that means cycle restarts
+
     result_2 = run_2(input)
     print(f"Finished 2 with result {result_2}")
-    """
-    <function diophantine at 0x1073c51f0>
->>> diophantine(17*a+41*b+643*c+23*d+13*e+29*f+433*g+37*h+19*i-9*t-294)
-{(t_0, t_0 + t_1, t_0 + t_1 + t_2, t_0 + t_1 + t_2 + t_3, t_0 + t_1 + t_2 + t_3 + t_4, t_0 + t_1 + t_2 + t_3 + t_4 + t_5, t_0 + t_1 + t_2 + t_3 + t_4 + t_5 + t_6, t_0 + t_1 + t_2 + t_3 + t_4 + t_5 + t_6 + t_7, -1227*t_0 - 1210*t_1 - 1169*t_2 - 526*t_3 - 503*t_4 - 490*t_5 - 461*t_6 - 28*t_7 + 9*t_8 + 294, -2453*t_0 - 2419*t_1 - 2337*t_2 - 1051*t_3 - 1005*t_4 - 979*t_5 - 921*t_6 - 55*t_7 + 19*t_8 + 588)}
->>> res = diophantine(17*a+41*b+643*c+23*d+13*e+29*f+433*g+37*h+19*i-9*t-294)
->>> len(res)
-1
->>> len(list(res)[0])
-10
->>> list(res)[0]
-(t_0, t_0 + t_1, t_0 + t_1 + t_2, t_0 + t_1 + t_2 + t_3, t_0 + t_1 + t_2 + t_3 + t_4, t_0 + t_1 + t_2 + t_3 + t_4 + t_5, t_0 + t_1 + t_2 + t_3 + t_4 + t_5 + t_6, t_0 + t_1 + t_2 + t_3 + t_4 + t_5 + t_6 + t_7, -1227*t_0 - 1210*t_1 - 1169*t_2 - 526*t_3 - 503*t_4 - 490*t_5 - 461*t_6 - 28*t_7 + 9*t_8 + 294, -2453*t_0 - 2419*t_1 - 2337*t_2 - 1051*t_3 - 1005*t_4 - 979*t_5 - 921*t_6 - 55*t_7 + 19*t_8 + 588)
->>> exit()
-"""
