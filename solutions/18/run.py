@@ -34,46 +34,14 @@ class Token(object):
         return 'INT', int(char)
 
     def __repr__(self):
-        # return f'{self.token}[{self.value}]'
         return f'{self.value}'
-
-#
-# class Expression(object):
-#
-#     def __init__(self, left, right, operator):
-#         # expressions
-#         self.left = left
-#         self.right = right
-#         # token (PLUS, MULT)
-#         self.operator = operator
-#
-#     def eval(self):
-#         if self.operator.token == 'PLUS':
-#             return self.left.eval() + self.right.eval()
-#         if self.operator.token == 'MULT':
-#             return self.left.eval() * self.right.eval()
-#         raise Exception(self.operator.token)
-#
-#     def __repr__(self):
-#         return f"({self.left.eval()} {self.operator.value} {self.right.eval()})"
-#
-#
-# class IntExpression(Expression):
-#
-#     def __init__(self, value):
-#         self.value = value
-#
-#     def eval(self):
-#         return self.value
-#
-#     def __repr__(self):
-#         return self.value
 
 
 class Evaluator(object):
 
-    def __init__(self, tokens):
+    def __init__(self, tokens, part):
         self.tokens = [i for i in tokens]
+        self.eval_block =  self.eval_block_1 if part == 1 else self.eval_block_2
 
     def eval(self):
         acc = self.eval_block()
@@ -89,7 +57,7 @@ class Evaluator(object):
 
         return acc
 
-    def eval_block(self):
+    def eval_block_1(self):
         next = self.tokens.pop(0)
         if next.token == 'INT':
             return next.value
@@ -110,39 +78,9 @@ class Evaluator(object):
         else:
             raise Exception(next)
 
-
-class Evaluator2(object):
-
-    def __init__(self, tokens):
-        self.tokens = [i for i in tokens]
-
-    def eval(self):
-        acc = self.eval_block()
-        # import pdb; pdb.set_trace()
-        while self.tokens:
-            operator = self.tokens.pop(0)
-            right = self.eval_block()
-            if operator.token == 'PLUS':
-                acc += right
-            elif operator.token == 'MULT':
-                acc *= right
-            else:
-                raise Exception(operator)
-
-        return acc
-
-    def eval_block(self):
-        import pdb; pdb.set_trace()
+    def eval_block_2(self):
         next = self.tokens.pop(0)
-        if next.token == 'INT':
-            if self.tokens and self.tokens[0].token == 'PLUS':
-                left = next.value
-                self.tokens.pop(0)  # pop the PLUS
-                right = self.eval_block()
-                return left + right
-            else:
-                return next.value
-        elif next.token == 'LPAREN':
+        if next.token == 'LPAREN':
             acc = self.eval_block()
             while self.tokens[0].token != 'RPAREN':
                 operator = self.tokens.pop(0)
@@ -155,27 +93,92 @@ class Evaluator2(object):
                     raise Exception(operator)
             # Pop the RPAREN
             self.tokens.pop(0)
-            return acc
+            if self.tokens and self.tokens[0].token == 'PLUS':
+                self.tokens.pop(0)  # pop the PLUS
+                right = self.eval_block()
+                return acc + right
+            else:
+                return acc
+        elif next.token == 'INT':
+            if self.tokens and self.tokens[0].token == 'PLUS':
+                left = next.value
+                self.tokens.pop(0)  # pop the PLUS
+                right = self.eval_block()
+                return left + right
+            else:
+                return next.value
+
+        else:
+            raise Exception(next)
+
+
+class Evaluator2(object):
+
+    def __init__(self, tokens):
+        self.tokens = [i for i in tokens]
+
+    def eval(self):
+        acc = self.eval_block()
+        while self.tokens:
+            operator = self.tokens.pop(0)
+            right = self.eval_block()
+            print(acc, operator, right)
+            if operator.token == 'PLUS':
+                acc += right
+            elif operator.token == 'MULT':
+                acc *= right
+            else:
+                raise Exception(operator)
+
+        return acc
+
+    def eval_block(self):
+        next = self.tokens.pop(0)
+        if next.token == 'LPAREN':
+            acc = self.eval_block()
+            while self.tokens[0].token != 'RPAREN':
+                operator = self.tokens.pop(0)
+                right = self.eval_block()
+                if operator.token == 'PLUS':
+                    acc += right
+                elif operator.token == 'MULT':
+                    acc *= right
+                else:
+                    raise Exception(operator)
+            # Pop the RPAREN
+            self.tokens.pop(0)
+            if self.tokens and self.tokens[0].token == 'PLUS':
+                self.tokens.pop(0)  # pop the PLUS
+                right = self.eval_block()
+                return acc + right
+            else:
+                return acc
+        elif next.token == 'INT':
+            if self.tokens and self.tokens[0].token == 'PLUS':
+                left = next.value
+                self.tokens.pop(0)  # pop the PLUS
+                right = self.eval_block()
+                return left + right
+            else:
+                return next.value
+
         else:
             raise Exception(next)
 
 
 def run_1(inputs):
-    result = 0
-    for line in inputs:
-        tokens = Token.tokenize(line.strip())
-        val = Evaluator(tokens).eval()
-        result += val
-    return result
+    return run(inputs, 1)
 
 
 def run_2(inputs):
+    return run(inputs, 2)
+
+
+def run(inputs, part):
     result = 0
     for line in inputs:
         tokens = Token.tokenize(line.strip())
-        print(tokens)
-        val = Evaluator2(tokens).eval()
-        print(val)
+        val = Evaluator(tokens, part).eval()
         result += val
     return result
 
@@ -239,30 +242,45 @@ def run_tests():
         raise Exception(f"Test 1.5 did not past, got {result_1}")
 
     # Part 2
+    test_inputs = """
+    2 * 3 * 5 + 5
+    """.strip().split('\n')
 
-    # test_inputs = """
-    # 2 * 3 + (4 * 5)
-    # """.strip().split('\n')
-    #
-    # result_2 = run_2(test_inputs)
-    # if result_2 != 46:
-    #     raise Exception(f"Test 2 did not past, got {result_2}")
-    #
-    # test_inputs = """
-    # 5 + (8 * 3 + 9 + 3 * 4 * 3)
-    # """.strip().split('\n')
-    #
-    # result_2 = run_2(test_inputs)
-    # if result_2 != 1445:
-    #     raise Exception(f"Test 2.2 did not past, got {result_2}")
-    #
-    # test_inputs = """
-    # 5 * 9 * (7 * 3 * 3 + 9 * 3 + (8 + 6 * 4))
-    # """.strip().split('\n')
-    #
-    # result_2 = run_2(test_inputs)
-    # if result_2 != 669060:
-    #     raise Exception(f"Test 2.3 did not past, got {result_2}")
+    result_2 = run_2(test_inputs)
+    if result_2 != 60:
+        raise Exception(f"Test 0.2 did not past, got {result_2}")
+
+    test_inputs = """
+    (2 * 3) * (5 * 5) + 5
+    """.strip().split('\n')
+
+    result_2 = run_2(test_inputs)
+    if result_2 != 180:
+        raise Exception(f"Test 0.2 did not past, got {result_2}")
+
+    test_inputs = """
+    2 * 3 + (4 * 5)
+    """.strip().split('\n')
+
+    result_2 = run_2(test_inputs)
+    if result_2 != 46:
+        raise Exception(f"Test 2 did not past, got {result_2}")
+
+    test_inputs = """
+    5 + (8 * 3 + 9 + 3 * 4 * 3)
+    """.strip().split('\n')
+
+    result_2 = run_2(test_inputs)
+    if result_2 != 1445:
+        raise Exception(f"Test 2.2 did not past, got {result_2}")
+
+    test_inputs = """
+    5 * 9 * (7 * 3 * 3 + 9 * 3 + (8 + 6 * 4))
+    """.strip().split('\n')
+
+    result_2 = run_2(test_inputs)
+    if result_2 != 669060:
+        raise Exception(f"Test 2.3 did not past, got {result_2}")
 
     test_inputs = """
     ((2 + 4 * 9) * (6 + 9 * 8 + 6) + 6) + 2 + 4 * 2
