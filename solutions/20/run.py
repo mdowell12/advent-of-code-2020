@@ -1,10 +1,61 @@
 from collections import defaultdict
+from math import sqrt
 
 import numpy as np
 
 from solutions.get_inputs import read_inputs
 
-# TODO update requirements.txt
+
+class Grid(object):
+
+    def __init__(self, tiles):
+        self.tiles = {t.id: t for t in tiles}
+        # import pdb; pdb.set_trace()
+        self.grid_size = int(sqrt(len(tiles)) * (tiles[0].array[0].size - 1))
+
+    def id_to_neighbors(self):
+        borders = {}
+        for tile in self.tiles.values():
+            for border in tile.borders():
+                key = ''.join(border)
+                if key in borders:
+                    borders[key].append(tile.id)
+                elif key[::-1] in borders:
+                    borders[key[::-1]].append(tile.id)
+                else:
+                    borders[key] = [tile.id]
+
+        if any(len(v) > 2 for v in borders.values()):
+            raise Exception("no way")
+
+        id_to_neighbors = defaultdict(list)
+        for border, tile_ids in borders.items():
+            for tile_id in tile_ids:
+                neighbors = [i for i in tile_ids if i != tile_id]
+                id_to_neighbors[tile_id] += neighbors
+        return id_to_neighbors
+
+    def assemble(self):
+        id_to_neighbors = self.id_to_neighbors()
+        # import pdb; pdb.set_trace()
+        queue = [i for i in id_to_neighbors if len(id_to_neighbors[i]) == 2][0]
+        done = set()
+        grid = np.array([['.'] * self.grid_size] * self.grid_size)
+        import pdb; pdb.set_trace()
+        while queue:
+            tile = queue.pop(0)
+            if tile.id in done:
+                continue
+            done.add(tile.id)
+            if grid is None:
+                grid = tile.array
+            for neighbor_id in id_to_neighbors[tile.id]:
+                neighbor = self.tiles[neighbor_id]
+                grid = add_neighbor_to_grid(tile, neighbor, grid)
+        return grid
+
+    def add_neighbor_to_grid(self, tile, neighbor, grid):
+        pass
 
 class Tile(object):
 
@@ -27,31 +78,16 @@ class Tile(object):
 
 def run_1(inputs):
     tiles = parse_input(inputs)
-    # import pdb; pdb.set_trace()
-    # for tile in tiles:
-    #     print(tile.id)
-    #     print(tile)
-    #     print()
-    borders = defaultdict(list)
-    # TODO this does not account for flipping a border. i.e. a border appears
-    # in the borders dict twice, in both orders
-    for tile in tiles:
-        for border in tile.borders():
-            borders[''.join(border)].append(tile.id)
-    print(borders)
-    if any(len(v) > 2 for v in borders.values()):
-        raise Exception("no way")
-    id_to_neighbors = defaultdict(list)
-    for border, tile_ids in borders.items():
-        for tile_id in tile_ids:
-            neighbors = [i for i in tile_ids if i != tile_id]
-            id_to_neighbors[tile_id] += neighbors
-    print(id_to_neighbors)
+    grid = Grid(tiles)
+    corners = [id for id, neighbors in grid.id_to_neighbors().items() if len(neighbors) == 2]
+    return corners[0] * corners[1] * corners[2] * corners[3]
 
 
 
 def run_2(inputs):
-    pass
+    tiles = parse_input(inputs)
+    grid = Grid(tiles)
+    grid.assemble()
 
 
 def parse_input(inputs):
@@ -71,6 +107,7 @@ def parse_input(inputs):
     if tile_id and lines:
         tiles.append(Tile(tile_id, lines))
     return tiles
+
 
 def run_tests():
     test_inputs = """
@@ -187,18 +224,18 @@ def run_tests():
     if result_1 != 20899048083289:
         raise Exception(f"Test 1 did not past, got {result_1}")
 
-    # result_2 = run_2(test_inputs)
-    # if result_2 != 0:
-    #     raise Exception(f"Test 2 did not past, got {result_2}")
+    result_2 = run_2(test_inputs)
+    if result_2 != 273:
+        raise Exception(f"Test 2 did not past, got {result_2}")
 
 
 if __name__ == "__main__":
     run_tests()
 
-    input = read_inputs(1)
+    input = read_inputs(20)
 
-    # result_1 = run_1(input)
-    # print(f"Finished 1 with result {result_1}")
+    result_1 = run_1(input)
+    print(f"Finished 1 with result {result_1}")
 
     # result_2 = run_2(input)
     # print(f"Finished 2 with result {result_2}")
