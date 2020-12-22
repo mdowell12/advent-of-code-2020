@@ -42,37 +42,44 @@ def ingredient_cannot_be_this_allergen(allergen, ingredient, allergen_to_foods):
 
 def run_2(inputs):
     foods = [parse_line(l) for l in inputs]
+    _, ingredient_to_allergens, cannot_be_allergen = get_maps(foods)
 
-    allergen_to_foods, ingredient_to_allergens, cannot_be_allergen = get_maps(foods)
-
+    # Remove ingredients that cannot be an allergen
     for ingredient in cannot_be_allergen:
-        # if allergen in allergen_to_foods:
-            # del allergen_to_foods[allergen]
         del ingredient_to_allergens[ingredient]
         foods = remove_ingredient_from_foods(foods, ingredient)
-        # ingredients = [i for i in ingredient_to_allergens.keys()]
-        # for ingredient in ingredient_to_allergens:
-        #     ingredient_to_allergens[ingredient] = ingredient_to_allergens[ingredient] - cannot_be_allergen
 
-    """
-    mxmxvkd sqjhc (contains dairy, fish)
-    fvjkl mxmxvkd (contains dairy)
-    sqjhc fvjkl (contains soy)
-    sqjhc mxmxvkd (contains fish)
-    """
+    # Consolidate into one row per food
+    unique_foods = []
+    for food in foods:
+        matching = [f for f in unique_foods if f[0] == food[0]]
+        if matching:
+            [matching[0][-1].add(i) for i in food[-1]]
+        else:
+            unique_foods.append(food)
+    foods = unique_foods
 
+    # Solve
     decisions = {ingredient: None for ingredient in ingredient_to_allergens.keys()}
-    import pdb; pdb.set_trace()
+    print("\n".join(sorted(str(i) for i in foods)))
     while (any(d is None for d in decisions.values())):
+        variables = [f for f in foods if len(f[0]) == len(f[1])]
 
-        foods = remove_inelligibles(foods, ingredient_to_allergens)
-
-        # for ingredient, allergens in ingredient_to_allergens.items():
         for ingredients, allergens in foods:
-            if len(ingredients) == 1 and len(allergens) == 1:
-                decisions[next(iter(ingredients))] = next(iter(allergens))
+            for v_ingredients, v_allergens in variables:
+                allergens_without = allergens - v_allergens
+                ingredients_without = ingredients - v_ingredients
+                if len(allergens_without) == 1 and len(ingredients_without) == 1:
+                    decisions[next(iter(ingredients_without))] = next(iter(allergens_without))
 
-        print(decisions)
+        for ingredient, allergen in decisions.items():
+            if allergen is not None:
+                foods = remove_ingredient_from_foods(foods, ingredient)
+                foods = remove_allergen_from_foods(foods, allergen)
+
+    # Format result
+    rev = {v: k for k,v  in decisions.items()}
+    return ",".join([rev[k] for k in sorted(decisions.values())])
 
 
 def remove_ingredient_from_foods(foods, ingredient):
@@ -83,23 +90,12 @@ def remove_ingredient_from_foods(foods, ingredient):
     return new_foods
 
 
-def remove_inelligibles(foods, ingredient_to_allergens):
-    # new_foods = []
-    # import pdb; pdb.set_trace()
-    variable_foods = [f for f in foods if len(f[0]) == len(f[1])]
-    ingredients_from_variable_foods = set(*[i for i, _ in variable_foods])
-
-    other_foods = [f for f in foods if len(f[0]) != len(f[1])]
-
-    # for ingredients, allergens in other_foods:
-    #     new_ingredients = ingredients - ingredients_from_variable_foods
-    #     new_food = (ingredients, allergen)
-    #     new_foods.append(new_food)
-    for ingredient in ingredients_from_variable_foods:
-        other_foods = remove_ingredient_from_foods(other_foods, ingredient)
-
-    return other_foods + variable_foods
-
+def remove_allergen_from_foods(foods, allergen):
+    new_foods = []
+    for ingredients, allergens in foods:
+        new_allergens = allergens - {allergen,}
+        new_foods.append((ingredients, new_allergens))
+    return new_foods
 
 
 def parse_line(line):
