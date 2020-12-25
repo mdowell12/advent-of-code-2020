@@ -1,5 +1,3 @@
-from collections import defaultdict
-
 from solutions.get_inputs import read_inputs
 
 
@@ -27,77 +25,43 @@ def score(deck):
 
 def run_2(inputs):
     deck_1, deck_2 = parse_inputs(inputs)
-    # TODO handle the exit case from "seen"?
     deck_1, deck_2 = play(deck_1, deck_2)
-    return score(deck_2) if deck_2 else score(deck_1)
+    return score(deck_1) if deck_1 else score(deck_2)
 
-GLOBAL_SEEN = defaultdict(lambda: 0)
-
-RESULTS = {
-
-}
 
 def play(deck_1, deck_2, level=0):
-    game_hash = hash_turn(deck_1, deck_2)
-    if game_hash in RESULTS:
-        # import pdb; pdb.set_trace()
-        print("still alive", level)
-        return RESULTS[game_hash]
-
     deck_1 = [i for i in deck_1]
     deck_2 = [i for i in deck_2]
 
-    # print(level)
-
     seen = set()
-    # if seen is None:
-    #     seen = set()
-    # else:
-    #     seen = set([i for i in seen])
-    # import pdb; pdb.set_trace()
+
     while deck_1 and deck_2:
         turn_hash = hash_turn(deck_1, deck_2)
-        if turn_hash in RESULTS:
-            import pdb; pdb.set_trace()
-            return RESULTS[turn_hash]
-        # print(deck_1, deck_2)
+
         if turn_hash in seen:
             break
         seen.add(turn_hash)
-        GLOBAL_SEEN[turn_hash] += 1
-        if len(set(GLOBAL_SEEN.values())) > 1:
-            # import pdb; pdb.set_trace()
-            print("seent it ", level)
-        # print(GLOBAL_SEEN)
 
         card_1 = deck_1.pop(0)
         card_2 = deck_2.pop(0)
 
-        # if card_1 <= (len(deck_1) + 1) and card_2 <= (len(deck_2) + 1):
         if card_1 <= len(deck_1) and card_2 <= len(deck_2):
-            # import pdb; pdb.set_trace()
-            # recurse_deck_1, recurse_deck_2 = play(deck_1, deck_2, seen=seen, level=level+1)
-            recurse_deck_1, recurse_deck_2 = play(deck_1, deck_2, level=level+1)
-            RESULTS[hash_turn(deck_1, deck_2)] = (recurse_deck_1, recurse_deck_2)
-            if recurse_deck_2:
-                # import pdb; pdb.set_trace()
-                player_1_wins = False
-            else:
+            recurse_deck_1, _ = play(deck_1[:card_1], deck_2[:card_2], level=level+1)
+            if recurse_deck_1:
                 player_1_wins = True
+            else:
+                player_1_wins = False
         else:
             if card_1 > card_2:
                 player_1_wins = True
-            elif card_1 < card_2:
-                player_1_wins = False
             else:
-                raise Exception(card_1)
+                player_1_wins = False
 
         if player_1_wins:
             deck_1 += [card_1, card_2]
         else:
             deck_2 += [card_2, card_1]
-    # import pdb; pdb.set_trace()
-    RESULTS[game_hash] = (deck_1, deck_2)
+
     return deck_1, deck_2
 
 

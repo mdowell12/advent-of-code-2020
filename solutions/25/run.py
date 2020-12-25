@@ -51,8 +51,6 @@ def run_tests():
     if result_1 != 14897079:
         raise Exception(f"Test 1 did not past, got {result_1}")
 
-
-
     # result_2 = run_2(test_inputs)
     # if result_2 != 0:
     #     raise Exception(f"Test 2 did not past, got {result_2}")
