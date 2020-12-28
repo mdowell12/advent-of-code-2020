@@ -1,68 +1,93 @@
 from solutions.get_inputs import read_inputs
 
 
-class Cups(object):
+class Cups2:
 
     def __init__(self, inputs, extra=None):
-        self.cups = [int(i) for i in inputs[0].strip()]
-        self.min = min(self.cups)
+        numbers = [int(i) for i in inputs[0]]
         if extra:
-            self.cups += [i for i in range(max(self.cups) + 1, extra + 1)]
-        self.max = max(self.cups)
+            numbers += list(range(max(numbers) + 1, extra + 1))
 
-    def take(self, n):
-        return [self.cups.pop(1) for _ in range(n)]
+        self.min = min(numbers)
+        self.max = max(numbers)
+
+        self.cups = {}
+        for i, number in enumerate(numbers[:-1]):
+            self.cups[number] = numbers[i+1]
+        self.cups[numbers[-1]] = numbers[0]
+        self.current_item = numbers[0]
+
+    def take(self):
+        # Get the next three cups
+        cup1 = self.cups[self.current_item]
+        cup2 = self.cups[cup1]
+        cup3 = self.cups[cup2]
+
+        # Remove them from the circle by linking the current cup
+        # to the cup after the ones that were taken
+        self.cups[self.current_item] = self.cups[cup3]
+
+        return [cup1, cup2, cup3]
 
     def find_destination(self, taken_l):
         taken = set(taken_l)
-        cur_val = self.cups[0]
-        maybe_destination = cur_val
+        maybe_destination = self.current_item
         while True:
             maybe_destination = maybe_destination - 1
             if maybe_destination < self.min:
                 maybe_destination = self.max
             if maybe_destination in taken:
                 continue
-            return self.cups.index(maybe_destination)
+            return maybe_destination
 
-    def replace(self, taken, destination_i):
-        self.cups = self.cups[:destination_i+1] + taken + self.cups[destination_i+1:]
+    def replace(self, taken, destination_value):
+        item_after_destination = self.cups[destination_value]
+        self.cups[destination_value] = taken[0]
+        self.cups[taken[0]] = taken[1]
+        self.cups[taken[1]] = taken[2]
+        self.cups[taken[2]] = item_after_destination
 
     def next_turn(self):
-        self.cups = self.cups[1:] + [self.cups[0]]
+        self.current_item = self.cups[self.current_item]
 
     def format(self):
-        s = ''.join(str(i) for i in self.cups)
-        parts = s.split('1', 2)
-        return parts[1] + parts[0]
+        result = []
+        item = self.cups[1]
+        while item != 1:
+            result.append(str(item))
+            item = self.cups[item]
+        return ''.join(result)
+
+    def format2(self):
+        return self.cups[1] * self.cups[self.cups[1]]
 
     def __repr__(self):
-        return str([c if i != 0 else f'({c})' for i, c in enumerate(self.cups)])
+        return str(self.cups)
 
 
 def run_1(inputs, num_turns):
-    cups = Cups(inputs)
-    for i in range(num_turns):
-        taken = cups.take(3)
+    cups = Cups2(inputs)
+    for _ in range(num_turns):
+        taken = cups.take()
         destination = cups.find_destination(taken)
         cups.replace(taken, destination)
-        # print('turn:', i, 'cups:', cups)
         cups.next_turn()
 
     return cups.format()
 
 
-
 def run_2(inputs):
-    cups = Cups(inputs, 1_000_000)
-    # print(cups.min, cups.max, len(cups.cups), len(set(cups.cups)))
+    cups = Cups2(inputs, 1_000_000)
     for i in range(10_000_000):
-        if i * 1_000 == 0:
+        if i % 100000 == 0:
             print(i)
-        taken = cups.take(3)
+        taken = cups.take()
         destination = cups.find_destination(taken)
         cups.replace(taken, destination)
         cups.next_turn()
+
+    return cups.format2()
+
 
 def run_tests():
     test_inputs = """
@@ -90,5 +115,5 @@ if __name__ == "__main__":
     result_1 = run_1(input, 100)
     print(f"Finished 1 with result {result_1}")
 
-    # result_2 = run_2(input)
-    # print(f"Finished 2 with result {result_2}")
+    result_2 = run_2(input)
+    print(f"Finished 2 with result {result_2}")
